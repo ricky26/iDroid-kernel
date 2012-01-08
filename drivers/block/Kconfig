@@ -512,4 +512,10 @@ config IPHONE_BLK
 	help
 	  Support for the iPhone's NAND.
 
+config BLK_DEV_APPLE
+	tristate "Apple flash devices"
+	depends on PLAT_S5L
+
+source "drivers/block/apple/Kconfig"
+
 endif # BLK_DEV
