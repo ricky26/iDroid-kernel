@@ -134,6 +134,12 @@ static struct map_desc s5l8930_iodesc[] __initdata = {
 		.length		= SZ_PWM,
 		.type		= MT_DEVICE,
 	},
+	{
+		.virtual	= (unsigned long)VA_CHIPID,
+		.pfn		= __phys_to_pfn(PA_CHIPID),
+		.length		= SZ_CHIPID,
+		.type		= MT_DEVICE,
+	},
 };
 
 static __init void s5l8930_cpu_map_io(void)
@@ -295,6 +301,8 @@ EXPORT_SYMBOL(s3c_setup_uart_cfg_gpio);
 
 void __init s5l8930_map_io(void)
 {
+//	unsigned long idcode = __raw_readl(VA_CHIPID);
+//	printk(KERN_ERR "%s:%d IDCODE=%x\n", __FUNCTION__, __LINE__, idcode);
 	s3c_init_cpu(0x8930, cpu_id, ARRAY_SIZE(cpu_id));
 	s3c24xx_init_clocks(24000000);
 	s3c24xx_init_uarts(s5l8930_uartcfgs, ARRAY_SIZE(s5l8930_uartcfgs));
