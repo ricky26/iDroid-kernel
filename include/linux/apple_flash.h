@@ -7,7 +7,8 @@ typedef uint32_t page_t;
 
 enum apple_nand_info
 {
-/*	NAND_NUM_CE,*/
+	NAND_VENDOR_TYPE,
+	NAND_NUM_CE,
 	NAND_BLOCKS_PER_CE,
 	NAND_PAGES_PER_CE,
 	NAND_PAGES_PER_BLOCK,
@@ -53,7 +54,7 @@ int register_apple_nand(struct apple_nand*);
 void remove_apple_nand(struct apple_nand*);
 
 int apple_nand_set_data_whitening(int whitening);
-int apple_nand_get_num_ce(void);
+int apple_nand_set_info(int info, int val);
 int apple_nand_get_info(int info);
 int apple_nand_special_page(u16 _ce, char _page[16],
 		uint8_t* _buffer, size_t _amt);

@@ -94,7 +94,7 @@ static uint32_t YAFTL_Init(void)
 	error_t error = 0;
 
 	if (yaftl_inited)
-		printk(KERN_DEBUG "PANIC!!!: Oh shit, yaftl already initialized!\r\n");
+		printk(KERN_ERR "PANIC!!!: Oh shit, yaftl already initialized!\r\n");
 
 	memset(&sInfo, 0, sizeof(sInfo));
 	memset(&sFTLStats, 0, sizeof(sFTLStats));
@@ -120,10 +120,10 @@ static uint32_t YAFTL_Init(void)
 		sGeometry.pagesPerSublk * sGeometry.numBlocks;
 
 	if (error)
-		printk(KERN_DEBUG "PANIC!!!: yaftl: vfl get info failed!\r\n");
+		printk(KERN_ERR "PANIC!!!: yaftl: vfl get info failed!\r\n");
 
 	if (sGeometry.spareDataSize != 0xC)
-		printk(KERN_DEBUG "PANIC!!!: yaftl: spareDataSize isn't 0xC!\r\n");
+		printk(KERN_ERR "PANIC!!!: yaftl: spareDataSize isn't 0xC!\r\n");
 
 	printk(KERN_ERR "yaftl: got information from VFL.\r\n");
 	printk(KERN_ERR "pagesPerSublk: %d\r\n", sGeometry.pagesPerSublk);
@@ -169,7 +169,7 @@ static uint32_t YAFTL_Init(void)
 			* sizeof(SpareData));
 
 	if (bufzone_finished_allocs(&sInfo.zone))
-		printk(KERN_DEBUG "PANIC!!!: YAFTL_Init: bufzone_finished_allocs failed!");
+		printk(KERN_ERR "PANIC!!!: YAFTL_Init: bufzone_finished_allocs failed!");
 
 	sInfo.pageBuffer = bufzone_rebase(&sInfo.zone, sInfo.pageBuffer);
 	sInfo.tocPageBuffer = bufzone_rebase(&sInfo.zone, sInfo.tocPageBuffer);
@@ -213,15 +213,15 @@ static uint32_t YAFTL_Init(void)
 
 	sInfo.tocArray = yaftl_alloc(sInfo.tocArrayLength * sizeof(TOCStruct));
 	if (!sInfo.tocArray)
-		printk(KERN_DEBUG "PANIC!!!: YAFTL: failed to allocate tocArray\r\n");
+		printk(KERN_ERR "PANIC!!!: YAFTL: failed to allocate tocArray\r\n");
 
 	sInfo.blockArray = yaftl_alloc(sGeometry.numBlocks * sizeof(BlockStruct));
 	if (!sInfo.blockArray)
-		printk(KERN_DEBUG "PANIC!!!: YAFTL: failed to allocate blockArray\r\n");
+		printk(KERN_ERR "PANIC!!!: YAFTL: failed to allocate blockArray\r\n");
 
 	sInfo.unknBuffer3_ftl = yaftl_alloc(sGeometry.pagesPerSublk << 2);
 	if (!sInfo.unknBuffer3_ftl)
-		printk(KERN_DEBUG "PANIC!!!: YAFTL: failed to allocate unknBuffer3_ftl\r\n");
+		printk(KERN_ERR "PANIC!!!: YAFTL: failed to allocate unknBuffer3_ftl\r\n");
 
 	// Initialize number of pages in a context slot.
 	sInfo.nPagesTocPageIndices = CEIL_DIVIDE(sInfo.tocArrayLength
@@ -257,17 +257,17 @@ static uint32_t YAFTL_Init(void)
 	gcResetReadCache(&sInfo.readc);
 
 	if (gcInit())
-		printk(KERN_DEBUG "PANIC!!!: YAFTL: GC initialization has failed\r\n");
+		printk(KERN_ERR "PANIC!!!: YAFTL: GC initialization has failed\r\n");
 
 	if (BTOC_Init())
-		printk(KERN_DEBUG "PANIC!!!: YAFTL: BTOC initialization has failed\r\n");
+		printk(KERN_ERR "PANIC!!!: YAFTL: BTOC initialization has failed\r\n");
 
 	sInfo.latestUserBlk.tocBuffer = YAFTL_allocBTOC(-3);
 	sInfo.latestIndexBlk.tocBuffer = YAFTL_allocBTOC(-2);
 
 	if (L2V_Init(sInfo.totalPages, sGeometry.numBlocks,
 					sGeometry.pagesPerSublk)) {
-		printk(KERN_DEBUG "PANIC!!!: YAFTL: L2V initialization has failed\r\n");
+		printk(KERN_ERR "PANIC!!!: YAFTL: L2V initialization has failed\r\n");
 	}
 
 	yaftl_inited = 1;
@@ -534,7 +534,7 @@ static int flushQuick(void)
 
 			if (!sInfo.field_79) {
 				if (vfl_erase_single_block(vfl, block, 1))
-					printk(KERN_DEBUG "PANIC!!!: yaftl: erase block %d failed\r\n", block);
+					printk(KERN_ERR "PANIC!!!: yaftl: erase block %d failed\r\n", block);
 
 				++sInfo.blockArray[block].eraseCount;
 				++sInfo.field_DC[3];
@@ -669,7 +669,7 @@ void YAFTL_Flush(void)
 		if (sInfo.blockArray[block].unkn5 != 0) {
 			// Need to erase.
 			if (vfl_erase_single_block(vfl, block, 1))
-				printk(KERN_DEBUG "PANIC!!!: yaftl: erase block %d failed\r\n", block);
+				printk(KERN_ERR "PANIC!!!: yaftl: erase block %d failed\r\n", block);
 
 			sInfo.blockArray[block].unkn5 = 0;
 		}
@@ -1327,7 +1327,7 @@ static uint32_t YAFTL_Restore(uint8_t ftlCtrlBlockPresent)
 
 
 	// TODO
-	printk(KERN_DEBUG "PANIC!!!: yaftl: sorry, no restore + write support yet :(\r\n");
+	printk(KERN_ERR "PANIC!!!: yaftl: sorry, no restore + write support yet :(\r\n");
 
 	printk(KERN_ERR "yaftl: context is invalid. performing a read-only restore...\r\n");
 
@@ -1386,10 +1386,10 @@ static uint32_t YAFTL_Restore(uint8_t ftlCtrlBlockPresent)
 			// User or index page. Determine which.
 			if (type & PAGETYPE_INDEX) {
 				if (!(indexListHead = addBlockToList(indexListHead, i, sInfo.spareBuffer10->usn)))
-					printk(KERN_DEBUG "PANIC!!!: yaftl: out of memory.\r\n");
+					printk(KERN_ERR "PANIC!!!: yaftl: out of memory.\r\n");
 			} else if (type & PAGETYPE_LBN) {
 				if (!(userListHead = addBlockToList(userListHead, i, sInfo.spareBuffer10->usn)))
-					printk(KERN_DEBUG "PANIC!!!: yaftl: out of memory.\r\n");
+					printk(KERN_ERR "PANIC!!!: yaftl: out of memory.\r\n");
 			} else {
 				printk(KERN_ERR "yaftl: warning - block %d doesn't belong to anything (type 0x%02x).\r\n", i, type);
 				if(!vfl_erase_single_block(vfl, i, 1))
@@ -1707,7 +1707,7 @@ static uint32_t YAFTL_Open(uint32_t signature_bit)
 	}
 
 	if (!sInfo.pageBuffer) {
-		printk(KERN_DEBUG "PANIC!!!: yaftl: This can't happen. This shouldn't happen. Whatever, it's doing something else then.\r\n");
+		printk(KERN_ERR "PANIC!!!: yaftl: This can't happen. This shouldn't happen. Whatever, it's doing something else then.\r\n");
 		return -1;
 	}
 
@@ -2122,7 +2122,7 @@ static uint32_t* refreshTOCCaches(uint32_t _page, uint32_t* _pCacheEntry)
 			kfreeCacheSlot = YAFTL_clearEntryInCache(0xFFFF);
 
 			if (kfreeCacheSlot == 0xFFFF)
-				printk(KERN_DEBUG "PANIC!!!: YAFTL: refreshTOCCaches is out of caches\r\n");
+				printk(KERN_ERR "PANIC!!!: YAFTL: refreshTOCCaches is out of caches\r\n");
 		}
 	}
 
@@ -2145,7 +2145,7 @@ static uint32_t* refreshTOCCaches(uint32_t _page, uint32_t* _pCacheEntry)
 					sInfo.field_78 = 0;
 				}
 
-				printk(KERN_DEBUG "PANIC!!!: YAFTL: refreshTOCCaches failed to read an index"
+				printk(KERN_ERR "PANIC!!!: YAFTL: refreshTOCCaches failed to read an index"
 						" page\r\n");
 			}
 		}
@@ -2186,7 +2186,7 @@ static void invalidatePages(uint32_t _start, uint32_t _count)
 			--sInfo.blockStats.numValidDPages;
 
 			if (sInfo.blockArray[block].validPagesDNo == 0) {
-				printk(KERN_DEBUG "PANIC!!!: YAFTL: tried to invalidate pages in block %d, "
+				printk(KERN_ERR "PANIC!!!: YAFTL: tried to invalidate pages in block %d, "
 						"but it had no valid pages at all!\r\n", block);
 			}
 

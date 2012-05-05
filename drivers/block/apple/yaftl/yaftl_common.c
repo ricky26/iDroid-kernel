@@ -22,7 +22,7 @@ static void deallocBTOC(uint32_t* btoc)
 		}
 	}
 
-	printk(KERN_DEBUG "PANIC!!!: YAFTL: couldn't deallocate BTOC %p\r\n", btoc);
+	printk(KERN_ERR "PANIC!!!: YAFTL: couldn't deallocate BTOC %p\r\n", btoc);
 }
 
 static void setupIndexSpare(SpareData* _pSpare, uint32_t _lpn)
@@ -50,7 +50,7 @@ static int writeIndexPage(void* _pBuf, SpareData* _pSpare)
 			YAFTL_allocateNewBlock(0);
 
 			if (sInfo.latestIndexBlk.usedPages != 0) {
-				printk(KERN_DEBUG "PANIC!!!: YAFTL: writeIndexPage expected a fresh index "
+				printk(KERN_ERR "PANIC!!!: YAFTL: writeIndexPage expected a fresh index "
 						"block, but %d of its pages are used\r\n",
 						sInfo.latestIndexBlk.usedPages);
 			}
@@ -237,7 +237,7 @@ void YAFTL_allocateNewBlock(uint8_t isUserBlock)
 			}
 
 			if (vfl_erase_single_block(vfl, currBlk, 1)) {
-				printk(KERN_DEBUG "PANIC!!!: YAFTL: YAFTL_allocateNewBlock failed to erase block %d\r\n",
+				printk(KERN_ERR "PANIC!!!: YAFTL: YAFTL_allocateNewBlock failed to erase block %d\r\n",
 						currBlk);
 			}
 
@@ -253,12 +253,12 @@ void YAFTL_allocateNewBlock(uint8_t isUserBlock)
 			// Candidate found.
 			if (sInfo.blockArray[currBlk].eraseCount < minEraseCnt) {
 				if (sInfo.blockArray[currBlk].validPagesINo) {
-					printk(KERN_DEBUG "PANIC!!!: YAFTL: YAFTL_allocateNewBlock found an empty block"
+					printk(KERN_ERR "PANIC!!!: YAFTL: YAFTL_allocateNewBlock found an empty block"
 							" (%d) with validPagesINo != 0\r\n", currBlk);
 				}
 
 				if (sInfo.blockArray[currBlk].validPagesDNo) {
-					printk(KERN_DEBUG "PANIC!!!: YAFTL: YAFTL_allocateNewBlock found an empty block"
+					printk(KERN_ERR "PANIC!!!: YAFTL: YAFTL_allocateNewBlock found an empty block"
 							" (%d) with validPagesDNo != 0\r\n", currBlk);
 				}
 
@@ -269,7 +269,7 @@ void YAFTL_allocateNewBlock(uint8_t isUserBlock)
 	}
 
 	if (bestBlk == 0xFFFFFFFF)
-		printk(KERN_DEBUG "PANIC!!!: YAFTL: YAFTL_allocateNewBlock is out of blocks\r\n");
+		printk(KERN_ERR "PANIC!!!: YAFTL: YAFTL_allocateNewBlock is out of blocks\r\n");
 
 	if (isUserBlock) {
 		deallocBTOC(sInfo.latestUserBlk.tocBuffer);
@@ -389,7 +389,7 @@ uint32_t* YAFTL_allocBTOC(uint32_t _block)
 	}
 
 	if (found == -1)
-		printk(KERN_DEBUG "PANIC!!!: yaftl: couldn't allocate a BTOC\r\n");
+		printk(KERN_ERR "PANIC!!!: yaftl: couldn't allocate a BTOC\r\n");
 
 	sInfo.btocCacheMissing &= ~(1<<found);
 	sInfo.btocCacheBlocks[found] = _block;
@@ -632,7 +632,7 @@ uint32_t YAFTL_clearEntryInCache(uint16_t _cacheIdx)
 			uint32_t oldIndexBlock = oldIndexPage / sGeometry.pagesPerSublk;
 
 			if (sInfo.blockArray[oldIndexBlock].validPagesINo == 0) {
-				printk(KERN_DEBUG "PANIC!!!: YAFTL: clearEntryInCache tried to invalidate an "
+				printk(KERN_ERR "PANIC!!!: YAFTL: clearEntryInCache tried to invalidate an "
 						"index page in block %d, but it has no index pages\r\n",
 						oldIndexBlock);
 			}
@@ -647,7 +647,7 @@ uint32_t YAFTL_clearEntryInCache(uint16_t _cacheIdx)
 				pSpare);
 
 		if (result) {
-			printk(KERN_DEBUG "PANIC!!!: YAFTL: clearEntryInCache failed to write dirty index"
+			printk(KERN_ERR "PANIC!!!: YAFTL: clearEntryInCache failed to write dirty index"
 					" page in %p\r\n", sInfo.tocCaches[bestDirty.idx].buffer);
 		}
 

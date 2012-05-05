@@ -12,7 +12,7 @@ void* yaftl_alloc(size_t size)
 #endif
 
 	if (!buffer)
-		printk(KERN_DEBUG "PANIC!!!: yaftl_alloc failed\r\n");
+		printk(KERN_ERR "PANIC!!!: yaftl_alloc failed\r\n");
 
 #ifdef YUSTAS_FIXME
 	memset(buffer, 0, size);
@@ -37,7 +37,7 @@ void* bufzone_alloc(bufzone_t* _zone, size_t size)
 	size_t oldSizeRounded;
 
 	if (_zone->state != 1)
-		printk(KERN_DEBUG "PANIC!!!: bufzone_alloc: bad state\r\n");
+		printk(KERN_ERR "PANIC!!!: bufzone_alloc: bad state\r\n");
 
 	oldSizeRounded = ROUND_UP(_zone->size, 64);
 	_zone->paddingsSize = _zone->paddingsSize + (oldSizeRounded - _zone->size);
@@ -52,15 +52,16 @@ error_t bufzone_finished_allocs(bufzone_t* _zone)
 	uint8_t* buff;
 
 	if (_zone->state != 1) {
-		printk(KERN_ERR "bufzone_finished_allocs: bad state\r\n");
+		printk(KERN_ERR "bufzone_finished_allocs: bad state\n");
 		return EINVAL;
 	}
 
 	_zone->size = ROUND_UP(_zone->size, 64);
+		printk(KERN_ERR "%s:%d size: %d\n", __FUNCTION__, __LINE__, _zone->size);
 	buff = yaftl_alloc(_zone->size);
 
 	if (!buff) {
-		printk(KERN_ERR "bufzone_finished_alloc: No buffer.\r\n");
+		printk(KERN_ERR "bufzone_finished_alloc: No buffer.\n");
 		return EINVAL;
 	}
 

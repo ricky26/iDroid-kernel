@@ -186,7 +186,7 @@ static uint32_t remap_block(vfl_vsvfl_device_t *_vfl, uint32_t _ce, uint32_t _bl
 			vBlock = _vfl->contexts[_ce].reserved_block_pool_start + (pwDesPbn % (_vfl->geometry.blocks_per_bank_vfl - _vfl->contexts[_ce].reserved_block_pool_start));
 
 			if(virtual_block_to_physical_block(_vfl, vBank, vBlock, &pBlock))
-				printk(KERN_DEBUG "PANIC!!!: vfl: failed to convert virtual reserved block to physical\r\n");
+				printk(KERN_ERR "PANIC!!!: vfl: failed to convert virtual reserved block to physical\r\n");
 
 			return pBlock;
 		}
@@ -283,7 +283,7 @@ static int add_block_to_scrub_list(vfl_vsvfl_device_t *_vfl, uint32_t _ce, uint3
 	}
 
 	if(!vfl_check_checksum(_vfl, _ce))
-		printk(KERN_DEBUG "PANIC!!!: vfl_add_block_to_scrub_list: failed checksum\r\n");
+		printk(KERN_ERR "PANIC!!!: vfl_add_block_to_scrub_list: failed checksum\r\n");
 
 	_vfl->contexts[_ce].scrub_list[_vfl->contexts[_ce].scrub_list_length++] = _block;
 	vfl_gen_checksum(_vfl, _ce);
@@ -308,7 +308,7 @@ static error_t vfl_vsvfl_write_single_page(vfl_device_t *_vfl, uint32_t dwVpn, u
 
 	if(ret) {
 		if(!vfl_check_checksum(vfl, pCE))
-			printk(KERN_DEBUG "PANIC!!!: vfl_vsfl_write_single_page: failed checksum\r\n");
+			printk(KERN_ERR "PANIC!!!: vfl_vsfl_write_single_page: failed checksum\r\n");
 
 		vfl->contexts[pCE].write_failure_count++;
 		vfl_gen_checksum(vfl, pCE);
@@ -385,7 +385,7 @@ static error_t vsvfl_write_vfl_cxt_to_flash(vfl_vsvfl_device_t *_vfl, uint32_t _
 		return EINVAL;
 
 	if(!vfl_check_checksum(_vfl, _ce))
-		printk(KERN_DEBUG "PANIC!!!: vsvfl_write_vfl_cxt_to_flash: failed checksum\r\n");
+		printk(KERN_ERR "PANIC!!!: vsvfl_write_vfl_cxt_to_flash: failed checksum\r\n");
 
 //	posix_memalign(&pageBuffer, 0x40, _vfl->geometry.bytes_per_page);
 //	posix_memalign(&spareBuffer, 0x40, _vfl->geometry.bytes_per_spare);
@@ -452,7 +452,7 @@ static error_t vfl_vsvfl_write_context(vfl_device_t *_vfl, uint16_t *_control_bl
 	// check and update cxt of each CE
 	for(i = 0; i < vfl->geometry.num_ce; i++) {
 		if(vfl_check_checksum(vfl, i) == 0)
-			printk(KERN_DEBUG "PANIC!!!: vsvfl: VFLCxt has bad checksum.\r\n");
+			printk(KERN_ERR "PANIC!!!: vsvfl: VFLCxt has bad checksum.\r\n");
 		memmove(vfl->contexts[i].control_block, _control_block, 6);
 		vfl_gen_checksum(vfl, i);
 	}
@@ -469,7 +469,7 @@ static error_t vfl_vsvfl_write_context(vfl_device_t *_vfl, uint16_t *_control_bl
 static error_t vsvfl_store_vfl_cxt(vfl_vsvfl_device_t *_vfl, uint32_t _ce) {
 	vfl_vsvfl_context_t *curVFLCxt;
 	if(_ce >= _vfl->geometry.num_ce)
-		printk(KERN_DEBUG "PANIC!!!: vfl: Can't store VFLCxt on non-existent CE\r\n");
+		printk(KERN_ERR "PANIC!!!: vfl: Can't store VFLCxt on non-existent CE\r\n");
 
 	curVFLCxt = &_vfl->contexts[_ce];
 	if(curVFLCxt->usn_page + 8 > _vfl->geometry.pages_per_block || vsvfl_write_vfl_cxt_to_flash(_vfl, _ce)) {
@@ -492,7 +492,7 @@ static error_t vsvfl_store_vfl_cxt(vfl_vsvfl_device_t *_vfl, uint32_t _ce) {
 				if(!fail) {
 					int result;
 					if(!vfl_check_checksum(_vfl, _ce))
-						printk(KERN_DEBUG "PANIC!!!: vsvfl_store_vfl_cxt: failed checksum\r\n");
+						printk(KERN_ERR "PANIC!!!: vsvfl_store_vfl_cxt: failed checksum\r\n");
 					curVFLCxt->usn_block = nextBlock;
 					curVFLCxt->usn_page = 0;
 					vfl_gen_checksum(_vfl, _ce);
@@ -568,7 +568,7 @@ static error_t vsvfl_replace_bad_block(vfl_vsvfl_device_t *_vfl, uint32_t _ce, u
 			i++;
 		}
 	}
-	printk(KERN_DEBUG "PANIC!!!: vsvfl_replace_bad_block: Failed to replace block\r\n");
+	printk(KERN_ERR "PANIC!!!: vsvfl_replace_bad_block: Failed to replace block\r\n");
 	return EIO;
 }
 
@@ -598,7 +598,7 @@ static error_t vfl_vsvfl_erase_single_block(vfl_device_t *_vfl, uint32_t _vbn, i
 					if(curVFLCxt->scrub_list[i] != vfl->blockBuffer[bank])
 						continue;
 					if(!vfl_check_checksum(vfl, pCE))
-						printk(KERN_DEBUG "PANIC!!!: vfl_erase_single_block: failed checksum\r\n");
+						printk(KERN_ERR "PANIC!!!: vfl_erase_single_block: failed checksum\r\n");
 					curVFLCxt->scrub_list[i] = 0;
 					curVFLCxt->scrub_list_length--;
 					if(i != curVFLCxt->scrub_list_length && curVFLCxt->scrub_list_length != 0)
@@ -648,7 +648,7 @@ static error_t vfl_vsvfl_erase_single_block(vfl_device_t *_vfl, uint32_t _vbn, i
 			// Bad block management at erasing should actually be like this (improvised \o/)
 			vsvfl_replace_bad_block(vfl, pCE, bankStart + blockOffset);
 			if(!vfl_check_checksum(vfl, pCE))
-				printk(KERN_DEBUG "PANIC!!!: vfl_erase_single_block: failed checksum\r\n");
+				printk(KERN_ERR "PANIC!!!: vfl_erase_single_block: failed checksum\r\n");
 			vfl->contexts[pCE].bad_block_count++;
 			vfl_gen_checksum(vfl, pCE);
 			vsvfl_store_vfl_cxt(vfl, pCE);
@@ -656,7 +656,7 @@ static error_t vfl_vsvfl_erase_single_block(vfl_device_t *_vfl, uint32_t _vbn, i
 	}
 
 	if (status)
-		printk(KERN_DEBUG "PANIC!!!: vfl: failed to erase virtual block %d!\r\n", _vbn);
+		printk(KERN_ERR "PANIC!!!: vfl: failed to erase virtual block %d!\r\n", _vbn);
 
 	return 0;
 }
@@ -703,7 +703,6 @@ static inline error_t vfl_vsvfl_setup_geometry(vfl_vsvfl_device_t *_vfl)
 {
 #define nand_load(what, where) _vfl->geometry.where = apple_nand_get_info(what)
 
-//	uint32_t val = 1;
 	uint16_t z;
 	uint32_t mag = 1;
 	uint16_t a;
@@ -713,7 +712,7 @@ static inline error_t vfl_vsvfl_setup_geometry(vfl_vsvfl_device_t *_vfl)
 	nand_load(NAND_BANKS_PER_CE, banks_per_ce);
 	nand_load(NAND_PAGE_SIZE, bytes_per_page);
 	nand_load(NAND_BANK_ADDRESS_SPACE, bank_address_space);
-	_vfl->geometry.num_ce = apple_nand_get_num_ce();
+	nand_load(NAND_NUM_CE, num_ce);
 	nand_load(NAND_PAGES_PER_BLOCK, pages_per_block);
 	_vfl->geometry.pages_per_block_2 = next_power_of_two(_vfl->geometry.pages_per_block);
 #ifdef YUSTAS_FIXME
@@ -792,12 +791,9 @@ static inline error_t vfl_vsvfl_setup_geometry(vfl_vsvfl_device_t *_vfl)
 	_vfl->geometry.fs_start_block = _vfl->geometry.vfl_blocks + _vfl->geometry.reserved_blocks;
 	printk(KERN_DEBUG "fs_start_block: 0x%08x\r\n", _vfl->geometry.fs_start_block);
 
-#ifdef YUSTAS_FIXME
-	nand->set(nand, diVendorType, val);
-
-	val = 0x10001;
-	nand->set(nand, NAND_BANKS_PER_CE_VFL, val);
-#endif
+	/* Set default values */
+	apple_nand_set_info(NAND_VENDOR_TYPE, 0x10001);
+	apple_nand_set_info(NAND_BANKS_PER_CE_VFL, 1);
 
 #undef nand_load
 
@@ -868,8 +864,7 @@ static error_t vfl_vsvfl_open(vfl_device_t *_vfl)
 			if(!(vfl->bbt[ce][i / 8] & (1 << (i  & 0x7))))
 				continue;
 
-			if(!apple_nand_read_page(ce, i * vfl->geometry.pages_per_block, pageBuffer, spareBuffer, 0))
-			{
+			if(! apple_nand_read_page(ce, i * vfl->geometry.pages_per_block, pageBuffer, spareBuffer, 0)) {
 				/*
 				 * YUSTAS_FIXME: type of VFL cxt is 0x91
 				 * Is that correct?
@@ -881,6 +876,7 @@ static error_t vfl_vsvfl_open(vfl_device_t *_vfl)
 					break;
 //				}
 			}
+
 		}
 
 //			print_hex_dump(KERN_INFO, "data: ", DUMP_PREFIX_OFFSET, 32,
@@ -986,12 +982,9 @@ static error_t vfl_vsvfl_open(vfl_device_t *_vfl)
 	vendorType = vfl->contexts[0].vendor_type;
 
 	if(!vendorType) {
-#ifdef YUSTAS_FIXME
-		if(nand_device_get_info(_nand, diVendorType, &vendorType, sizeof(vendorType)))
-			return EIO;
-#else
-		vendorType = 0x10001;
-#endif
+		vendorType = apple_nand_get_info(NAND_VENDOR_TYPE);
+		if (vendorType < 0)
+			return -EIO;
 	}
 
 	switch(vendorType) {
@@ -1030,7 +1023,7 @@ static error_t vfl_vsvfl_open(vfl_device_t *_vfl)
 	vfl->geometry.blocks_per_bank_vfl = vfl->geometry.blocks_per_ce / vfl->geometry.banks_per_ce;
 
 	banksPerCE = vfl->geometry.banks_per_ce;
-//	_nand->set(_nand, NAND_BANKS_PER_CE_VFL, banksPerCE);
+	apple_nand_set_info(NAND_BANKS_PER_CE_VFL, banksPerCE);
 
 	printk(KERN_ERR "vsvfl: detected chip vendor 0x%06x\r\n", vendorType);
 
@@ -1055,7 +1048,7 @@ static error_t vfl_vsvfl_open(vfl_device_t *_vfl)
 				} else if(mapEntry > 0xFFF0) {
 					virtual_block_to_physical_block(vfl, ce + bank * vfl->geometry.num_ce, num_reserved + i, &pBlock);
 				} else {
-					printk(KERN_DEBUG "PANIC!!!: vsvfl: bad map table: CE %d, entry %d, value 0x%08x\r\n",
+					printk(KERN_ERR "PANIC!!!: vsvfl: bad map table: CE %d, entry %d, value 0x%08x\r\n",
 						ce, bank * num_non_reserved + i, mapEntry);
 				}
 
@@ -1124,8 +1117,8 @@ static error_t vfl_vsvfl_get_info(vfl_device_t *_vfl, vfl_info_t _item, void *_r
 		return 0;
 
 	case diTotalBanks:
-		auto_store(_result, _sz, apple_nand_get_info(NAND_BANKS_PER_CE/*_VFL*/) 
-				* apple_nand_get_num_ce());
+		auto_store(_result, _sz, apple_nand_get_info(NAND_BANKS_PER_CE_VFL) 
+				* apple_nand_get_info(NAND_NUM_CE));
 		return 0;
 
 	default:

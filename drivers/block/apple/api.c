@@ -8,6 +8,8 @@
 #define TOTAL_CHIPS_COUNT	2
 struct apple_nand *chips[TOTAL_CHIPS_COUNT];
 int total_chips = 0;
+int banks_per_ce_vfl;
+int vendor_type;
 
 struct apple_nand* get_apple_nand(u16 ce)
 {
@@ -47,18 +49,39 @@ void remove_apple_nand(struct apple_nand *_nd)
 }
 EXPORT_SYMBOL_GPL(remove_apple_nand);
 
-int apple_nand_get_num_ce(void)
-{
-	return total_chips;
-}
-EXPORT_SYMBOL_GPL(apple_nand_get_num_ce);
-
 int apple_nand_get_info(int info)
 {
 	struct apple_nand *nand = get_apple_nand(0);
-	return nand->get(nand, info);
+
+	switch(info)
+	{
+	case NAND_NUM_CE:
+		return total_chips;
+	case NAND_BANKS_PER_CE_VFL:
+		return banks_per_ce_vfl;
+	case NAND_VENDOR_TYPE:
+		return vendor_type;
+	default:
+		return nand->get(nand, info);
+	}
 }
 EXPORT_SYMBOL_GPL(apple_nand_get_info);
+
+int apple_nand_set_info(int info, int val)
+{
+	switch(info)
+	{
+	case NAND_BANKS_PER_CE_VFL:
+		banks_per_ce_vfl = val;
+		return 0;
+	case NAND_VENDOR_TYPE:
+		vendor_type = val;
+		return 0;
+	default:
+		return -EINVAL;
+	}
+}
+EXPORT_SYMBOL_GPL(apple_nand_set_info);
 
 int apple_nand_special_page(u16 _ce, char _page[16],
 		uint8_t* _buffer, size_t _amt)
@@ -156,10 +179,11 @@ EXPORT_SYMBOL_GPL(apple_nand_write_page);
 int apple_nand_erase_block(u16 _ce, page_t _page)
 {
 	struct apple_nand *_nd = get_apple_nand(_ce);
+	u16 chip = 0;
 	if(!_nd->erase)
 		return -EPERM;
 
-	return _nd->erase(_nd, 1, &_ce, &_page);
+	return _nd->erase(_nd, 1, &chip, &_page);
 }
 EXPORT_SYMBOL_GPL(apple_nand_erase_block);
 

@@ -947,8 +947,10 @@ static int h2fmi_read_pages(struct h2fmi_state *_state, int _count,
 {
 	int i, j;
 
-	if(_state->state != H2FMI_IDLE)
+	if(_state->state != H2FMI_IDLE) {
+		printk(KERN_ERR "%s:%d Implement waiting\n", __FUNCTION__, __LINE__);
 		return -EBUSY;
+	}
 
 	memset(&_state->transaction, 0, sizeof(_state->transaction));
 
@@ -1041,17 +1043,25 @@ static int h2fmi_read_pages(struct h2fmi_state *_state, int _count,
 		}
 	}
 
-	if(_state->transaction.result)
+	if(_state->transaction.result) {
+		printk(KERN_ERR "%s:%d not success!\n", __FUNCTION__, __LINE__);
 		return _state->transaction.result;
+	}
 
-	if(_state->transaction.num_failed)
+	if(_state->transaction.num_failed) {
+		printk(KERN_ERR "%s:%d not success!\n", __FUNCTION__, __LINE__);
 		return -EIO;
+	}
 
-	if(_state->transaction.num_ecc)
+	if(_state->transaction.num_ecc) {
+		printk(KERN_ERR "%s:%d not success!\n", __FUNCTION__, __LINE__);
 		return -EUCLEAN;
+	}
 
-	if(_state->transaction.num_empty)
+	if(_state->transaction.num_empty) {
+		printk(KERN_ERR "%s:%d not success!\n", __FUNCTION__, __LINE__);
 		return -ENOENT;
+	}
 
 	return 0;
 }
@@ -1804,6 +1814,7 @@ static int h2fmi_detect_nand(struct h2fmi_state *_state)
 		return PTR_ERR(clk);
 
 	timing_setup.freq = clk_get_rate(clk);
+	printk(KERN_ERR "freq: %lld\n", timing_setup.freq);
 
 	clk_put(clk);
 

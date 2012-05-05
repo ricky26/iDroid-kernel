@@ -47,7 +47,7 @@ static uint32_t gcListPopFront(GCList* _list)
 	uint32_t block;
 	
 	if (_list->head == _list->tail)
-		printk(KERN_DEBUG "PANIC!!!: YAFTL: gcListPopFront was called but list is empty\r\n");
+		printk(KERN_ERR "PANIC!!!: YAFTL: gcListPopFront was called but list is empty\r\n");
 
 	block = _list->block[_list->head++];
 	if (_list->head > GCLIST_MAX)
@@ -72,7 +72,7 @@ static int gcFillIndex(uint32_t _lpn, uint32_t* _pBuf)
 			L2V_Search(&sInfo.gc.index.read_c);
 
 			if (sInfo.gc.index.read_c.span == 0) {
-				printk(KERN_DEBUG "PANIC!!!: YAFTL: gcFillIndex -- no such page %d\r\n",
+				printk(KERN_ERR "PANIC!!!: YAFTL: gcFillIndex -- no such page %d\r\n",
 						basePage + i);
 			}
 		}
@@ -91,7 +91,7 @@ static int gcFillIndex(uint32_t _lpn, uint32_t* _pBuf)
 
 			sInfo.gc.index.read_c.vpn += count;
 		} else {
-			printk(KERN_DEBUG "PANIC!!!: YAFTL: gcFillIndex got an invalid vpn %x\r\n", vpn);
+			printk(KERN_ERR "PANIC!!!: YAFTL: gcFillIndex got an invalid vpn %x\r\n", vpn);
 		}
 
 		i += count;
@@ -119,7 +119,7 @@ static error_t gcReadZoneData(GCData* _data, uint8_t _isIndex, uint8_t _scrub)
 			uint32_t entry = _data->btoc[zone[i] % sGeometry.pagesPerSublk];
 			spareArray[i].lpn = entry;
 			if (entry == 0xFFFFFFFF) {
-				printk(KERN_DEBUG "PANIC!!!: YAFTL: gcReadZoneData read an invalid LPN "
+				printk(KERN_ERR "PANIC!!!: YAFTL: gcReadZoneData read an invalid LPN "
 						"%d\r\n", entry);
 			}
 
@@ -141,7 +141,7 @@ static error_t gcReadZoneData(GCData* _data, uint8_t _isIndex, uint8_t _scrub)
 	if (YAFTL_readMultiPages(zone, _data->curZoneSize, pageBuffer, spareArray,
 				!_isIndex, _scrub) != 1) {
 		// TODO: Don't panic, manually read the pages.
-		printk(KERN_DEBUG "PANIC!!!: YAFTL: gcReadZoneData couldn't read multi pages\r\n");
+		printk(KERN_ERR "PANIC!!!: YAFTL: gcReadZoneData couldn't read multi pages\r\n");
 	}
 
 	return 0;
@@ -156,7 +156,7 @@ static int gcHandleVpnMiss(GCData* _data, uint8_t _scrub)
 	SpareData* pSpare = sInfo.gcSpareBuffer;
 
 	if (indexPageNo >= sInfo.tocArrayLength) {
-		printk(KERN_DEBUG "PANIC!!!: YAFTL: gcHandleVpnMiss got an out-of-range index page "
+		printk(KERN_ERR "PANIC!!!: YAFTL: gcHandleVpnMiss got an out-of-range index page "
 				"%d\r\n", indexPageNo);
 	}
 
@@ -189,7 +189,7 @@ static int gcHandleVpnMiss(GCData* _data, uint8_t _scrub)
 				sInfo.field_78 = 1;
 			}
 
-			printk(KERN_DEBUG "PANIC!!!: YAFTL: gcHandleVpnMiss Index UECC page 0x%08x status"
+			printk(KERN_ERR "PANIC!!!: YAFTL: gcHandleVpnMiss Index UECC page 0x%08x status"
 					" %08x\r\n", page, status);
 		} else {
 			if (!(pSpare->type & PAGETYPE_INDEX)) {
@@ -198,7 +198,7 @@ static int gcHandleVpnMiss(GCData* _data, uint8_t _scrub)
 					sInfo.field_78 = 1;
 				}
 
-				printk(KERN_DEBUG "PANIC!!!: YAFTL: gcHandleVpnMiss Invalid index metadata "
+				printk(KERN_ERR "PANIC!!!: YAFTL: gcHandleVpnMiss Invalid index metadata "
 						"0x%02x\r\n", pSpare->type);
 			} else {
 				--sInfo.numFreeCaches;
@@ -249,12 +249,12 @@ static void gcChooseBlock(GCData* _data, uint8_t _filter)
 			if (_filter == BLOCKSTATUS_ALLOCATED
 					&& status != BLOCKSTATUS_CURRENT
 					&& status != BLOCKSTATUS_GC) {
-				printk(KERN_DEBUG "PANIC!!!: YAFTL: gcChooseBlock chose a block which doesn't"
+				printk(KERN_ERR "PANIC!!!: YAFTL: gcChooseBlock chose a block which doesn't"
 						" match the filter -- status %02x\r\n", status);
 			} else if (_filter == BLOCKSTATUS_I_ALLOCATED
 					&& status != BLOCKSTATUS_I_CURRENT
 					&& status != BLOCKSTATUS_I_GC) {
-				printk(KERN_DEBUG "PANIC!!!: YAFTL: gcChooseBlock chose an index block which "
+				printk(KERN_ERR "PANIC!!!: YAFTL: gcChooseBlock chose an index block which "
 						"doesn't match the filter -- status %02x\r\n", status);
 			}
 		}
@@ -277,7 +277,7 @@ static void gcChooseBlock(GCData* _data, uint8_t _filter)
 
 	if (best == 0xFFFFFFFF || bestValid == 0xFFFFFFFF
 			|| bestErases == 0xFFFFFFFF) {
-		printk(KERN_DEBUG "PANIC!!!: YAFTL: gcChooseBlock couldn't find a block\r\n");
+		printk(KERN_ERR "PANIC!!!: YAFTL: gcChooseBlock couldn't find a block\r\n");
 	}
 
 	_data->chosenBlock = best;
@@ -295,7 +295,7 @@ static void gcSanityCheckValid(GCData* _data)
 				blk->validPagesINo, blk->validPagesDNo);
 
 		if (_data->uECC < blk->validPagesINo + blk->validPagesDNo) {
-			printk(KERN_DEBUG "PANIC!!!: YAFTL: non-zero validity counter; block %d, "
+			printk(KERN_ERR "PANIC!!!: YAFTL: non-zero validity counter; block %d, "
 					"uECC %d\r\n", _data->chosenBlock, _data->uECC);
 		} else {
 			printk(KERN_ERR "YAFTL: %d uECCs caused it. fixing up counters\r\n",
@@ -409,7 +409,7 @@ static int gcWriteDataPages(GCData* _data, uint8_t _scrub)
 		cache = toc->cacheNum;
 
 		if (toc->indexPage == 0xFFFFFFFF && cache == 0xFFFF) {
-			printk(KERN_DEBUG "PANIC!!!: YAFTL: gcWriteDataPages failed to find TOC %d\r\n",
+			printk(KERN_ERR "PANIC!!!: YAFTL: gcWriteDataPages failed to find TOC %d\r\n",
 				indexPageNo);
 		}
 
@@ -421,7 +421,7 @@ static int gcWriteDataPages(GCData* _data, uint8_t _scrub)
 				cache = YAFTL_clearEntryInCache(0xFFFF);
 
 			if (cache == 0xFFFF)
-				printk(KERN_DEBUG "PANIC!!!: YAFTL: failed to find a TOC cache\r\n");
+				printk(KERN_ERR "PANIC!!!: YAFTL: failed to find a TOC cache\r\n");
 
 			status = YAFTL_readPage(
 				toc->indexPage, (uint8_t*)sInfo.tocCaches[cache].buffer, spare,
@@ -433,7 +433,7 @@ static int gcWriteDataPages(GCData* _data, uint8_t _scrub)
 					sInfo.field_78 = 0;
 				}
 
-				printk(KERN_DEBUG "PANIC!!!: YAFTL: uecc toc page 0x%08x status 0x%08x\r\n",
+				printk(KERN_ERR "PANIC!!!: YAFTL: uecc toc page 0x%08x status 0x%08x\r\n",
 					toc->indexPage, status);
 				return status;
 			}
@@ -453,7 +453,7 @@ static int gcWriteDataPages(GCData* _data, uint8_t _scrub)
 					sInfo.field_78 = 0;
 				}
 
-				printk(KERN_DEBUG "PANIC!!!: YAFTL: gcWriteDataPages tried to move a page from"
+				printk(KERN_ERR "PANIC!!!: YAFTL: gcWriteDataPages tried to move a page from"
 					" a block with no valid data pages %d\r\n", blk);
 			}
 
@@ -514,7 +514,7 @@ static int gcFreeDataPages(int32_t _numPages, uint8_t _scrub)
 
 			if (sInfo.blockArray[sInfo.gc.data.chosenBlock].validPagesINo
 					!= 0) {
-				printk(KERN_DEBUG "PANIC!!!: YAFTL: gcFreeDataPages chose a block with no"
+				printk(KERN_ERR "PANIC!!!: YAFTL: gcFreeDataPages chose a block with no"
 						" valid index pages\r\n");
 			}
 
@@ -554,7 +554,7 @@ static int gcFreeDataPages(int32_t _numPages, uint8_t _scrub)
 						sInfo.gc.data.read_c.pageIndex = btocEntry;
 						L2V_Search(&sInfo.gc.data.read_c);
 						if (sInfo.gc.data.read_c.span == 0) {
-							printk(KERN_DEBUG "PANIC!!!: YAFTL: gcFreeDataPages has called "
+							printk(KERN_ERR "PANIC!!!: YAFTL: gcFreeDataPages has called "
 									"L2V_Search but span is still 0\r\n");
 						}
 
@@ -577,7 +577,7 @@ static int gcFreeDataPages(int32_t _numPages, uint8_t _scrub)
 								break;
 							}
 						} else if (vpn != L2V_VPN_SPECIAL) {
-							printk(KERN_DEBUG "PANIC!!!: YAFTL: gcFreeDataPages doesn't know "
+							printk(KERN_ERR "PANIC!!!: YAFTL: gcFreeDataPages doesn't know "
 									"what vpn %X is\r\n", vpn);
 						}
 
@@ -600,7 +600,7 @@ static int gcFreeDataPages(int32_t _numPages, uint8_t _scrub)
 						<= sInfo.gc.data.curZoneSize) {
 					if (sInfo.blockArray[sInfo.gc.data.chosenBlock].
 							validPagesDNo < sInfo.gc.data.curZoneSize) {
-						printk(KERN_DEBUG "PANIC!!!: YAFTL: gcFreeDataPages tried to free "
+						printk(KERN_ERR "PANIC!!!: YAFTL: gcFreeDataPages tried to free "
 								"more pages than it should\r\n");
 					}
 
@@ -631,7 +631,7 @@ static int gcFreeDataPages(int32_t _numPages, uint8_t _scrub)
 			if (sInfo.gc.data.curZoneSize > 0) {
 				if (sInfo.blockArray[sInfo.gc.data.chosenBlock].validPagesDNo <
 						sInfo.gc.data.curZoneSize) {
-					printk(KERN_DEBUG "PANIC!!!: YAFTL: gcFreeDataPages had pages left in the"
+					printk(KERN_ERR "PANIC!!!: YAFTL: gcFreeDataPages had pages left in the"
 							" zone, but there aren't valid pages at all\r\n");
 				}
 
@@ -756,7 +756,7 @@ static error_t gcWriteIndexPages(GCData* _data)
 		block = sInfo.latestIndexBlk.blockNum;
 
 		if (sInfo.latestIndexBlk.usedPages) {
-			printk(KERN_DEBUG "PANIC!!!: YAFTL: gcWriteIndexPages got a non-empty block "
+			printk(KERN_ERR "PANIC!!!: YAFTL: gcWriteIndexPages got a non-empty block "
 					"%d\r\n", block);
 		}
 	}
@@ -867,7 +867,7 @@ void gcListPushBack(GCList* _list, uint32_t _block)
 		_list->tail = 0;
 
 	if (_list->tail == _list->head)
-		printk(KERN_DEBUG "PANIC!!!: YAFTL: gcListPushBack -- list is full\r\n");
+		printk(KERN_ERR "PANIC!!!: YAFTL: gcListPushBack -- list is full\r\n");
 }
 
 void gcFreeBlock(uint32_t _block, uint8_t _scrub)
@@ -969,7 +969,7 @@ void gcFreeIndexPages(uint32_t _victim, uint8_t _scrub)
 						if (toc->indexPage == block * sGeometry.pagesPerSublk
 								+ i) {
 							if (sInfo.blockArray[block].validPagesINo == 0) {
-								printk(KERN_DEBUG "PANIC!!!: YAFTL: gcFreeIndexPages tried to"
+								printk(KERN_ERR "PANIC!!!: YAFTL: gcFreeIndexPages tried to"
 										" invalidate in block %d, with no "
 										"valid pages\r\n", block);
 							}
@@ -987,12 +987,12 @@ void gcFreeIndexPages(uint32_t _victim, uint8_t _scrub)
 
 				// Data is not cached. First, validate everything.
 				if (toc->indexPage == 0xFFFFFFFF) {
-					printk(KERN_DEBUG "PANIC!!!: YAFTL: gcFreeIndexPages found a TOC which "
+					printk(KERN_ERR "PANIC!!!: YAFTL: gcFreeIndexPages found a TOC which "
 							"is not cached nor available %d\r\n", block);
 				}
 
 				if (toc->indexPage != block * sGeometry.pagesPerSublk + i)
-					printk(KERN_DEBUG "PANIC!!!: YAFTL: gcFreeIndexPages can't be here\r\n");
+					printk(KERN_ERR "PANIC!!!: YAFTL: gcFreeIndexPages can't be here\r\n");
 
 				// Find a free cache.
 				toc->cacheNum = YAFTL_findFreeTOCCache();
@@ -1013,7 +1013,7 @@ void gcFreeIndexPages(uint32_t _victim, uint8_t _scrub)
 					toc->indexPage = 0xFFFFFFFF;
 
 					if (sInfo.blockArray[block].validPagesINo == 0) {
-						printk(KERN_DEBUG "PANIC!!!: YAFTL: gcFreeIndexPages tried to "
+						printk(KERN_ERR "PANIC!!!: YAFTL: gcFreeIndexPages tried to "
 								"invalidate an index in block %d but it has "
 								"no valid indexes\r\n", block);
 					}
@@ -1028,7 +1028,7 @@ void gcFreeIndexPages(uint32_t _victim, uint8_t _scrub)
 				// No free cache :( Must free manually.
 				if (sInfo.blockArray[block].validPagesINo <
 						sInfo.gc.index.curZoneSize) {
-					printk(KERN_DEBUG "PANIC!!!: YAFTL: gcFreeIndexPages can't invalidate "
+					printk(KERN_ERR "PANIC!!!: YAFTL: gcFreeIndexPages can't invalidate "
 							"more pages than available (%d < %d)\r\n",
 							sInfo.blockArray[block].validPagesINo,
 							sInfo.gc.index.curZoneSize);

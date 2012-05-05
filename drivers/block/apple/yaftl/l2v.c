@@ -11,7 +11,7 @@ error_t L2V_Init(uint32_t totalPages, uint32_t numBlocks, uint32_t pagesPerSublk
 	int32_t i;
 
 	if (numBlocks * pagesPerSublk > 0x1FF0001)
-		printk(KERN_DEBUG "PANIC!!!: L2V: Tree bitspace not sufficient for geometry %dx%d\r\n", numBlocks, pagesPerSublk);
+		printk(KERN_ERR "PANIC!!!: L2V: Tree bitspace not sufficient for geometry %dx%d\r\n", numBlocks, pagesPerSublk);
 
 	L2V.numBlocks = numBlocks;
 	L2V.pagesPerSublk = pagesPerSublk;
@@ -20,15 +20,15 @@ error_t L2V_Init(uint32_t totalPages, uint32_t numBlocks, uint32_t pagesPerSublk
 
 	L2V.Tree = (uint32_t*)yaftl_alloc(L2V.numRoots * sizeof(uint32_t));
 	if (!L2V.Tree)
-		printk(KERN_DEBUG "PANIC!!!: L2V: tree allocation has failed\r\n");
+		printk(KERN_ERR "PANIC!!!: L2V: tree allocation has failed\r\n");
 
 	L2V.TreeNodes = (uint32_t*)yaftl_alloc(L2V.numRoots * sizeof(uint32_t));
 	if (!L2V.TreeNodes)
-		printk(KERN_DEBUG "PANIC!!!: L2V: tree nodes allocation has failed\r\n");
+		printk(KERN_ERR "PANIC!!!: L2V: tree nodes allocation has failed\r\n");
 
 	L2V.UpdatesSinceRepack = (uint32_t*)yaftl_alloc(L2V.numRoots * sizeof(uint32_t));
 	if (!L2V.UpdatesSinceRepack)
-		printk(KERN_DEBUG "PANIC!!!: L2V: updates since repack allocation has failed\r\n");
+		printk(KERN_ERR "PANIC!!!: L2V: updates since repack allocation has failed\r\n");
 
 	for (i = 0; i < L2V.numRoots; ++i)
 		L2V.Tree[i] = 0x7FC000Cu;
@@ -134,7 +134,7 @@ void L2V_UpdateFromTOC(uint32_t _tocIdx, uint32_t* _tocBuffer)
 static void L2V_SetFirstNode(L2VNode* node)
 {
 	if (node < &L2V.Pool[0] || node > &L2V.Pool[0x10000])
-		printk(KERN_DEBUG "PANIC!!!: L2V: new first node must be in pool range\r\n");
+		printk(KERN_ERR "PANIC!!!: L2V: new first node must be in pool range\r\n");
 
 	node->next = L2V.firstNode;
 	L2V.firstNode = node;
@@ -145,7 +145,7 @@ L2VNode* L2V_EraseFirstNode(void)
 {
 	L2VNode* node;
 	if (!L2V.firstNode)
-		printk(KERN_DEBUG "PANIC!!!: L2V: currentNode not set\r\n");
+		printk(KERN_ERR "PANIC!!!: L2V: currentNode not set\r\n");
 
 	node = L2V.firstNode;
 	L2V.firstNode = node->next;
@@ -195,11 +195,11 @@ void L2V_Search(GCReadC* _c)
 			span += *(uint16_t*)((uint8_t*)&_c->node->next + _c->nodeSize) << bits; // high bits for span
 
 			if ((_c->next_nOfs) > (_c->nodeSize - 6)) //sizeof(lPtr_t) = 6
-				printk(KERN_DEBUG "PANIC!!!: _c->next_nOfs) <= _c->nodeSize - sizeof(lPtr_t)");
+				printk(KERN_ERR "PANIC!!!: _c->next_nOfs) <= _c->nodeSize - sizeof(lPtr_t)");
 		}
 
 		if (span == 0)
-			printk(KERN_DEBUG "PANIC!!!: L2V: span mustn't be zero!");
+			printk(KERN_ERR "PANIC!!!: L2V: span mustn't be zero!");
 
 		if (!setting)
 		{
@@ -222,7 +222,7 @@ void L2V_Search(GCReadC* _c)
 	uint32_t targTofs = pageNum % 0x8000;
 	uint32_t targTree = pageNum / 0x8000; // root number
 	if(L2V.numRoots <= targTree)
-		printk(KERN_DEBUG "PANIC!!!: L2V: targTree has to be less than L2V.numRoots");
+		printk(KERN_ERR "PANIC!!!: L2V: targTree has to be less than L2V.numRoots");
 
 	if (L2V.Tree[targTree] & 1)
 	{
@@ -242,7 +242,7 @@ void L2V_Search(GCReadC* _c)
 	while (1)
 	{
 		if (_c->field_20 > 31)
-			printk(KERN_DEBUG "PANIC!!!: L2V_Search() fail!\r\n");
+			printk(KERN_ERR "PANIC!!!: L2V_Search() fail!\r\n");
 
 		if (value == 0)
 		{
@@ -269,7 +269,7 @@ void L2V_Search(GCReadC* _c)
 			{
 				node = (uint32_t*)((uint8_t*)&pool->next + nOfs);
 				if (*node == 0xFFFFFFFF)
-					printk(KERN_DEBUG "PANIC!!!: NAND index: bad tree\n");
+					printk(KERN_ERR "PANIC!!!: NAND index: bad tree\n");
 				if (*node & 1)
 				{
 					bits = 14;
@@ -288,18 +288,18 @@ void L2V_Search(GCReadC* _c)
 					nodeSize -= 2; 
 					Span += *(uint16_t*)((uint8_t*)&pool->next + nodeSize) << bits;
 						if (nOfs > (nodeSize - 4)) //sizeof(lPtr_t) = 6
-							printk(KERN_DEBUG "PANIC!!!: _c->next_nOfs) <= c->nodeSize - sizeof(lPtr_t)\n");
+							printk(KERN_ERR "PANIC!!!: _c->next_nOfs) <= c->nodeSize - sizeof(lPtr_t)\n");
 				}
 
 				if (Span == 0);
-					printk(KERN_DEBUG "PANIC!!!: L2V_Search fail!!\r\n");
+					printk(KERN_ERR "PANIC!!!: L2V_Search fail!!\r\n");
 
 				if (targTofs >= (Span + nextSpan))
 				{
 					nOfs += sizeof(uint16_t);
 					nextSpan += Span;
 					if(nOfs > nodeSize - 6)
-						printk(KERN_DEBUG "PANIC!!!: NAND index: bad tree\n");
+						printk(KERN_ERR "PANIC!!!: NAND index: bad tree\n");
 					continue;
 				} else {
 					_c->next_nOfs = nOfs + 4;
@@ -375,7 +375,7 @@ void L2V_Repack(uint32_t rootNum)
 			}
 
 			if (L2VS.span[i] == 0)
-				printk(KERN_DEBUG "PANIC!!!: ((cu).span) != (0)\n");
+				printk(KERN_ERR "PANIC!!!: ((cu).span) != (0)\n");
 
 			// [0:1]=config, [2:17] = vpn, [18:31] = span-lo
 			*(uint32_t*)(&node1.Ofs + nOfs)= (L2VS.span[i] << 18) | (((&L2VS.Node[i] - &L2V.Pool[0]) / 0x40) & 0xFFFF) << 2 | 3;//repacking
@@ -400,7 +400,7 @@ void L2V_Repack(uint32_t rootNum)
 		}
 
 		if (nodes == 0 && spanCount != 0x8000)
-			printk(KERN_DEBUG "PANIC!!!: (thisSpan) == ((1 << 15)) \n");
+			printk(KERN_ERR "PANIC!!!: (thisSpan) == ((1 << 15)) \n");
 
 		L2VS.bottomIdx = nodes;
 	}
@@ -408,7 +408,7 @@ void L2V_Repack(uint32_t rootNum)
 	L2V.TreeNodes[rootNum] = index;
 
 	if (L2VS.bottomIdx != 0)
-		printk(KERN_DEBUG "PANIC!!!: (r->bottomIdx) == (0)\n");
+		printk(KERN_ERR "PANIC!!!: (r->bottomIdx) == (0)\n");
 
 	L2V.Tree[rootNum] = (((&L2VS.Node[0] - &L2V.Pool[0]) / 0x40) & 0xFFFF) << 2 | 1; // span = 0
 	L2V.UpdatesSinceRepack[rootNum] = 0;
