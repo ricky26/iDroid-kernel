@@ -186,7 +186,7 @@ static struct platform_device cdma_dev = {
 	.num_resources = ARRAY_SIZE(cdma_res),
 
 	.dev = {
-		.coherent_dma_mask = DMA_32BIT_MASK,
+		.coherent_dma_mask = DMA_BIT_MASK(32),
 	},
 };
 

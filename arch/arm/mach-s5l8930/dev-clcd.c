@@ -52,7 +52,7 @@ static struct platform_device clcd_dev = {
 	.dev = {
 		.platform_data = &dp_info,
 
-		.coherent_dma_mask = DMA_32BIT_MASK,
+		.coherent_dma_mask = DMA_BIT_MASK(32),
 	},
 };
 

@@ -77,6 +77,7 @@ static struct h2fmi_smth h2fmi_smth_ipt4g = { { 0, 0, 0, 5, 5, 5, 5, 0 }, { 0x33
 static struct h2fmi_smth h2fmi_smth_atv2g = { { 0, 0, 0, 3, 3, 3, 4, 0 }, { 0x3333, 0xCCCC, 0 } };
 #endif
 
+#if 0
 static int count_bits(u32 _val)
 {
 	int ret = 0;
@@ -91,6 +92,7 @@ static int count_bits(u32 _val)
 
 	return ret;
 }
+#endif
 
 static struct h2fmi_platform_data pdata0 = {
 	.ecc_step_shift = 10,
@@ -121,7 +123,7 @@ static struct platform_device h2fmi0 = {
 
 	.dev = {
 		.platform_data = &pdata0,
-		.coherent_dma_mask = DMA_32BIT_MASK,
+		.coherent_dma_mask = DMA_BIT_MASK(32),
 	},
 };
 
@@ -134,7 +136,7 @@ static struct platform_device h2fmi1 = {
 
 	.dev = {
 		.platform_data = &pdata1,
-		.coherent_dma_mask = DMA_32BIT_MASK,
+		.coherent_dma_mask = DMA_BIT_MASK(32),
 	},
 };
 
