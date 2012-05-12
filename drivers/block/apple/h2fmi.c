@@ -668,7 +668,6 @@ static int h2fmi_setup_timing(struct h2fmi_timing_setup *_timing, u8 *_buffer)
 	_buffer[3] = var_28;
 	_buffer[4] = h2fmi_round_down(smth, max(_timing->f + _timing->r, var_2C));
 
-	_buffer[2] = 2; // TODO: This is a hack because the above calculation is somehow broken.
 	return 0;
 }
 
@@ -1814,7 +1813,6 @@ static int h2fmi_detect_nand(struct h2fmi_state *_state)
 		return PTR_ERR(clk);
 
 	timing_setup.freq = clk_get_rate(clk);
-	printk(KERN_ERR "freq: %lld\n", timing_setup.freq);
 
 	clk_put(clk);
 

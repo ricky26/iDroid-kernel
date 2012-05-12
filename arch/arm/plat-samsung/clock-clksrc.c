@@ -44,7 +44,9 @@ static unsigned long s3c_getrate_clksrc(struct clk *clk)
 
 	clkdiv &= mask;
 	clkdiv >>= sclk->reg_div.shift;
+#ifndef CONFIG_CPU_S5L8930
 	clkdiv++;
+#endif
 
 	rate /= clkdiv;
 	return rate;
