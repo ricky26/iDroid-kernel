@@ -173,7 +173,7 @@ static int s5l89xx_spi_update_state(struct spi_device *spi,
 		if (div > 255)
 			div = 255;
 
-		dev_dbg(&spi->dev, "pre-scaler=%d src=%u (wanted %d, got %ld)\n",
+		dev_dbg(&spi->dev, "pre-scaler=%d src=%lu (wanted %d, got %ld)\n",
 			div, clk, hz, clk / (2 * (div + 1)));
 
 		cs->hz = hz;

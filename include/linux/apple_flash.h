@@ -7,6 +7,7 @@ typedef uint32_t page_t;
 
 enum apple_nand_info
 {
+	NAND_VENDOR_TYPE,
 	NAND_NUM_CE,
 	NAND_BLOCKS_PER_CE,
 	NAND_PAGES_PER_CE,
@@ -29,7 +30,8 @@ struct apple_nand
 	int (*read)(struct apple_nand *, int _count,
 		u16 *_chips, page_t *_pages,
 		struct scatterlist *_sg_data, size_t _sg_num_data,
-		struct scatterlist *_sg_oob, size_t _sg_num_oob);
+		struct scatterlist *_sg_oob, size_t _sg_num_oob,
+		int disable_aes);
 
 	int (*write)(struct apple_nand *, int _count,
 		u16 *_chips, page_t *_pages,
@@ -42,20 +44,25 @@ struct apple_nand
 	int (*get)(struct apple_nand *, int _info);
 	int (*set)(struct apple_nand *, int _info, int _val);
 
-	int (*is_bad)(struct apple_nand*, u16 _ce, page_t _page);
-	void (*set_bad)(struct apple_nand*, u16 _ce, page_t _page);
+//	int (*is_bad)(struct apple_nand*, u16 _ce, page_t _page);
+//	void (*set_bad)(struct apple_nand*, u16 _ce, page_t _page);
+
+	int (*set_whitening)(struct apple_nand *, int whitening);
 };
 
 int register_apple_nand(struct apple_nand*);
 void remove_apple_nand(struct apple_nand*);
 
-int apple_nand_special_page(struct apple_nand*, u16 _ce, char _page[16],
+int apple_nand_set_data_whitening(int whitening);
+int apple_nand_set_info(int info, int val);
+int apple_nand_get_info(int info);
+int apple_nand_special_page(u16 _ce, char _page[16],
 		uint8_t* _buffer, size_t _amt);
-int apple_nand_read_page(struct apple_nand*, u16 _ce, page_t _page,
-		uint8_t *_data, uint8_t *_oob);
-int apple_nand_write_page(struct apple_nand*, u16 _ce, page_t _page,
+int apple_nand_read_page(u16 _ce, page_t _page,
+		uint8_t *_data, uint8_t *_oob, int disable_aes);
+int apple_nand_write_page(u16 _ce, page_t _page,
 		const uint8_t *_data, const uint8_t *_oob);
-int apple_nand_erase_block(struct apple_nand*, u16 _ce, page_t _page);
+int apple_nand_erase_block(u16 _ce, page_t _page);
 
 struct apple_vfl
 {

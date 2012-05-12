@@ -107,11 +107,11 @@ static int s5l_clcd_dev_probe(struct mipi_dsim_lcd_device *_dev)
 
 		printk("CLCD regs:\n");
 		for(i = 0; i < 25; i++)
-			printk("0x%08x: 0x%08x\n", state->regs + (i*4), readl(state->regs + (i*4)));
+			printk("0x%08x: 0x%08x\n", (unsigned int)(state->regs + (i*4)), readl(state->regs + (i*4)));
 
 		printk("MIPI DSIM regs:\n");
 		for(i = 0; i < 24; i++)
-			printk("0x%08x: 0x%08x\n", dsim->reg_base + (i*4), readl(dsim->reg_base + (i*4)));
+			printk("0x%08x: 0x%08x\n", (unsigned int)(dsim->reg_base + (i*4)), readl(dsim->reg_base + (i*4)));
 	}
 
 	return 0;

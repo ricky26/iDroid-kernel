@@ -301,8 +301,10 @@ static int display_pipe_probe(struct platform_device *_dev)
 
 	goto exit;
 
+#if 0
 fail_drv:
 	platform_set_drvdata(_dev, NULL);
+#endif
 
 fail_clk:
 	clk_put(state->clk);

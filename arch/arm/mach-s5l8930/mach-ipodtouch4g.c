@@ -58,6 +58,7 @@ static struct fb_videomode video_mode = {
 	.flag = 0xD,
 };
 
+#if 0
 static struct gpio_keys_button buttons[] = {
 	[0] = {
 		.type = EV_KEY,
@@ -110,6 +111,7 @@ static struct spi_board_info __initdata spidevs[] = {
 		.platform_data = &z2_data,
 	},
 };
+#endif
 
 static void __init ipt4g_init(void)
 {

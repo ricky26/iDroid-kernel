@@ -82,7 +82,7 @@ static unsigned long s5l_pll_get_rate(struct s5l_pll *_pll)
 		return 0;
 
 	base = (((uint64_t)PLLCON0_P(conf)) << PLLCON0_S(conf));
-	freq = (PLLCON0_M(conf) * (uint64_t)CLOCK_BASE_HZ);
+	freq = ((uint64_t)PLLCON0_M(conf) * (uint64_t)CLOCK_BASE_HZ);
 	do_div(freq, base);
 	return freq;
 }
@@ -298,7 +298,8 @@ static struct clksrc_clk clk_system1 = {
 	.clk = {
 		.name = "system1",
 		.id = -1,
-		.parent = &clk_system0.clk,
+//		.parent = &clk_system0.clk,
+		.parent = &clk_system_source.clk,
 	},
 
 	.reg_div = { .reg = VA_PMGR0 + 0x40, .shift = SHIFT_DIV2, .size = SIZE_DIV },

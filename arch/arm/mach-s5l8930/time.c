@@ -5,7 +5,7 @@
 #include <mach/time.h>
 #include <asm/mach/time.h>
 
-static void timer_disable()
+static void timer_disable(void)
 {
 	//printk("%s\n", __func__);
 	writel(2, S5L_TIMER0_CTRL);
